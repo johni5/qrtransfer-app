@@ -20,6 +20,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 
+import com.del.qr.MessageEncoder;
+import com.del.qr.Part;
 import com.google.android.gms.samples.vision.barcodereader.ui.camera.GraphicOverlay;
 import com.google.android.gms.vision.barcode.Barcode;
 
@@ -100,11 +102,11 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
         rect.bottom = translateY(rect.bottom);
         canvas.drawRect(rect, mRectPaint);
 
-        String v = barcode.rawValue;
-        if (v != null && v.length() > 7) {
+        Part v = MessageEncoder.encodeHex(barcode.rawValue);
+        if (v != null) {
             try {
-                int index =  ByteBuffer.wrap(StringUtil.hexStringToByteArray(v.substring(0, 4))).getShort();
-                int count = ByteBuffer.wrap(StringUtil.hexStringToByteArray(v.substring(4, 8))).getShort();
+                int index = v.getIndex();
+                int count = v.getSize();
                 canvas.drawText(index + "/" + count, rect.left, rect.bottom, mTextPaint);
             } catch (Exception e) {
                 //

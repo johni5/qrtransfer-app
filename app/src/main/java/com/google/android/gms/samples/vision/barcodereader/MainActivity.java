@@ -17,24 +17,25 @@
 package com.google.android.gms.samples.vision.barcodereader;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import com.del.qr.Message;
 import com.google.android.gms.common.api.CommonStatusCodes;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * Main activity demonstrating how to pass extra parameters to an activity that
@@ -112,7 +113,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (requestCode == RC_BARCODE_CAPTURE) {
             if (resultCode == CommonStatusCodes.SUCCESS) {
                 if (i != null) {
-                    byte[] data = i.getByteArrayExtra(BarcodeCaptureActivity.BarcodeObject);
+                    Message data = (Message) i.getSerializableExtra(BarcodeCaptureActivity.BarcodeObject);
                     if (data != null) {
                         statusMessage.setText(R.string.unzip_stage_1);
                         new DownloadImageTask().execute(data);
@@ -130,28 +131,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    private class DownloadImageTask extends AsyncTask<byte[], Void, String> {
+    private class DownloadImageTask extends AsyncTask<Message, Void, String> {
 
         @Override
-        protected String doInBackground(byte[]... s) {
+        protected String doInBackground(Message... s) {
             if (s != null && s.length > 0) {
-                byte[] data = s[0];
-                if (data != null) {
-                    ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(data));
-                    ZipEntry entry;
-                    String name;
+                Message m = s[0];
+                if (m != null) {
                     try {
-                        while ((entry = zip.getNextEntry()) != null) {
-                            name = entry.getName(); // получим название файла
-                            // распаковка
+                        m.unzip();
+                        if (m.isClipboard()) {
+                            Handler mainThreadHandler = new Handler(Looper.getMainLooper());
+                            final String text = m.getTextUTF();
+                            mainThreadHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                    clipboard.setText(text);
+                                }
+                            });
+                            return String.format(getString(R.string.unzip_stage_4), m.getName());
+                        } else {
                             File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                            File file = new File(directory, name);
+                            File file = new File(directory, m.getName());
                             FileOutputStream fout = new FileOutputStream(file);
-                            for (int c = zip.read(); c != -1; c = zip.read()) {
-                                fout.write(c);
-                            }
+                            fout.write(m.getBody());
                             fout.flush();
-                            zip.closeEntry();
                             fout.close();
                             return String.format(getString(R.string.unzip_stage_4), file.getAbsolutePath());
                         }

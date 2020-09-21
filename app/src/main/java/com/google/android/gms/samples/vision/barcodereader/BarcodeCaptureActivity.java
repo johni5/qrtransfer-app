@@ -42,6 +42,9 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.del.qr.Message;
+import com.del.qr.MessageEncoder;
+import com.del.qr.Part;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.CommonStatusCodes;
@@ -53,9 +56,6 @@ import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -442,7 +442,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
         }
     }
 
-    private final Map<Integer, byte[]> bodyTotal = new ConcurrentHashMap<>();
+    private final Map<Integer, String> bodyTotal = new ConcurrentHashMap<>();
     private int countTotal = 0;
 
     @Override
@@ -452,42 +452,32 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
 
     }
 
-    private class ReadBarcodeTask extends AsyncTask<Barcode, Void, byte[]> {
+    private class ReadBarcodeTask extends AsyncTask<Barcode, Void, Message> {
 
         @Override
-        protected byte[] doInBackground(Barcode... s) {
+        protected Message doInBackground(Barcode... s) {
             if (s != null && s.length > 0) {
-                String v = s[0].rawValue;
-                if (v != null && v.length() > 7) {
+                String hex = s[0].rawValue;
+                if (hex != null && hex.length() > 15) {
                     try {
-                        int index = ByteBuffer.wrap(StringUtil.hexStringToByteArray(v.substring(0, 4))).getShort();
-                        int count = ByteBuffer.wrap(StringUtil.hexStringToByteArray(v.substring(4, 8))).getShort();
-                        if (index == 0 && countTotal == 0) {
-                            countTotal = count;
-                        }
-                        if (index > 0 && index <= countTotal && !bodyTotal.containsKey(index)) {
-                            byte[] bytes = StringUtil.hexStringToByteArray(v);
-                            byte[] body = Arrays.copyOfRange(bytes, 4, bytes.length);
-                            Log.i(TAG, "*** Detect part " + index + " of " + count + " ***");
-                            bodyTotal.put(index, body);
-                            if (bodyTotal.size() == count) {
-                                Log.i(TAG, "*** FINISH ***");
-                                int size = 0;
-                                for (byte[] value : bodyTotal.values()) {
-                                    size += value.length;
+                        Part p = MessageEncoder.encodeHex(hex);
+                        if (p != null) {
+                            int index = p.getIndex();
+                            int count = p.getSize();
+                            if (index == 0 && countTotal == 0) {
+                                countTotal = count + 1;
+                            }
+                            if (index < countTotal && !bodyTotal.containsKey(index)) {
+                                Log.i(TAG, "*** Detect part " + index + " of " + count + " ***");
+                                bodyTotal.put(index, hex);
+                                if (bodyTotal.size() == countTotal) {
+                                    Log.i(TAG, "*** FINISH ***");
+                                    return MessageEncoder.encode(bodyTotal.values());
                                 }
-                                byte[] data = new byte[size];
-                                int destPos = 0;
-                                for (int i = 1; i <= count; i++) {
-                                    System.arraycopy(bodyTotal.get(i), 0, data, destPos, bodyTotal.get(i).length);
-                                    destPos += bodyTotal.get(i).length;
-                                }
-                                return data;
                             }
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "*** Bad part: " + v + "  ***");
+                        Log.e(TAG, "*** Bad part: " + hex + "  ***", e);
                     }
 
                 }
@@ -496,7 +486,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
         }
 
         @Override
-        protected void onPostExecute(byte[] data) {
+        protected void onPostExecute(Message data) {
             if (data != null) {
                 Intent iData = new Intent();
                 iData.putExtra(BarcodeObject, data);
