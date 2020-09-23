@@ -66,6 +66,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         useFlash = (CompoundButton) findViewById(R.id.use_flash);
 
         findViewById(R.id.read_barcode).setOnClickListener(this);
+        findViewById(R.id.btn_web_client).setOnClickListener(this);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
@@ -76,13 +77,22 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.read_barcode) {
-            // launch barcode activity.
-            Intent intent = new Intent(this, BarcodeCaptureActivity.class);
-            intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
-            intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
+        switch (v.getId()) {
+            case R.id.read_barcode: {
+                // launch barcode activity.
+                Intent intent = new Intent(this, BarcodeCaptureActivity.class);
+                intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
+                intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
+                startActivityForResult(intent, RC_BARCODE_CAPTURE);
+                break;
 
-            startActivityForResult(intent, RC_BARCODE_CAPTURE);
+            }
+            case R.id.btn_web_client: {
+                Intent intent = new Intent(this, WebClientActivity.class);
+                startActivity(intent);
+                break;
+
+            }
         }
 
     }

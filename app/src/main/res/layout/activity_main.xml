@@ -43,14 +43,6 @@
         android:layout_marginTop="110dp"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/read_barcode"
-        android:id="@+id/read_barcode"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
-
     <CheckBox
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -71,5 +63,26 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:checked="false" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" >
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/read_barcode"
+            android:id="@+id/read_barcode" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_web_client"
+            android:id="@+id/web_client" />
+
+    </LinearLayout>
 
 </RelativeLayout>
