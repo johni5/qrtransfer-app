@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -148,6 +149,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
                                 public void run() {
                                     android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                                     clipboard.setText(text);
+                                    Snackbar.make(getWindow().getDecorView().getRootView(),
+                                            "Текст скопирован в буфер обмена",
+                                            5000).show();
+
                                 }
                             });
                             return String.format(getString(R.string.unzip_stage_4), m.getName());

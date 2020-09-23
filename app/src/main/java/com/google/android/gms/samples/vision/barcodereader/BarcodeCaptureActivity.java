@@ -115,10 +115,6 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
         gestureDetector = new GestureDetector(this, new CaptureGestureListener());
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
-        Snackbar.make(mGraphicOverlay, "Tap to capture. Pinch/Stretch to zoom",
-                Snackbar.LENGTH_LONG)
-                .show();
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
@@ -493,8 +489,13 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
                 setResult(CommonStatusCodes.SUCCESS, iData);
                 finish();
             }
-            if (countTotal > 0)
-                uploadInfoMessage.setText(String.format("%s of %s", bodyTotal.size(), countTotal));
+            if (countTotal > 0) {
+                Integer waitIndex = 0;
+                while (waitIndex <= countTotal) {
+                    if (!bodyTotal.containsKey(waitIndex++)) break;
+                }
+                uploadInfoMessage.setText(String.format("%s из %s жду %s", bodyTotal.size(), countTotal, waitIndex));
+            }
         }
     }
 
