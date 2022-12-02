@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version">Version 1.04</string>
+    <string name="version">Version 1.074</string>
     <string name="ok">OK</string>
     <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
+    <string name="permission_storage_rationale">Access to the storage is needed for save file</string>
+    <string name="permission_internet_rationale">Access to the Internet is needed</string>
     <string name="no_camera_permission">This application cannot run because it does not have the camera permission.  The application will now exit.</string>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>
     <string name="title_activity_main">QRTransfer</string>
-    <string name="barcode_header">Click &quot;Read Barcode&quot; to read a barcode</string>
-    <string name="read_barcode">Старт</string>
-    <string name="btn_web_client">Скачать приложение</string>
-    <string name="btn_back">Закрыть</string>
+    <string name="barcode_header">Click &quot;START&quot; to receive data</string>
+    <string name="read_barcode">Start</string>
+    <string name="btn_web_client">Download app</string>
+    <string name="btn_back">Close</string>
     <string name="auto_focus">Auto Focus</string>
     <string name="use_flash">Use Flash</string>
     <string name="barcode_success">Barcode read successfully</string>
@@ -20,4 +22,7 @@
     <string name="unzip_stage_3">Save file</string>
     <string name="unzip_stage_4">Saved to %s</string>
     <string name="barcode_error">"Error reading barcode: %1$s"</string>
+    <string name="exit_question">"Вы действительно хотите закрыть приложение?"</string>
+    <string name="YES">"Да"</string>
+    <string name="NO">"Нет"</string>
 </resources>

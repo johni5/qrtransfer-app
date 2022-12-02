@@ -1,11 +1,16 @@
-package com.google.android.gms.samples.vision.barcodereader;
+package com.del.qrt;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.webkit.DownloadListener;
 import android.webkit.WebResourceError;
@@ -22,7 +27,10 @@ public class WebClientActivity extends Activity implements View.OnClickListener 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.web_client);
         findViewById(R.id.btn_back).setOnClickListener(this);
+        loadPage();
+    }
 
+    private void loadPage() {
         WebView webClient = (WebView) findViewById(R.id.web_client);
         webClient.getSettings().setJavaScriptEnabled(true);
 
@@ -59,7 +67,6 @@ public class WebClientActivity extends Activity implements View.OnClickListener 
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
         }
-
     }
 
 }

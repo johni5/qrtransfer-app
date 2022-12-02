@@ -1,0 +1,6 @@
+/.idea/
+/.gradle/
+/qrtransfer-app.iml
+/app/build/
+/app/debug/
+/app/release/

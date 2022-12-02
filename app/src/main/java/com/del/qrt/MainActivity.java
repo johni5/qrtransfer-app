@@ -14,22 +14,28 @@
  * limitations under the License.
  */
 
-package com.google.android.gms.samples.vision.barcodereader;
+package com.del.qrt;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.del.qr.Message;
@@ -45,8 +51,6 @@ import java.io.FileOutputStream;
 public class MainActivity extends Activity implements View.OnClickListener {
 
     // use a compound button so either checkbox or switch widgets work.
-    private CompoundButton autoFocus;
-    private CompoundButton useFlash;
     private TextView statusMessage;
     private TextView barcodeValue;
 
@@ -59,15 +63,42 @@ public class MainActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        // Check for the camera permission before accessing the storage.  If the
+        // permission is not granted yet, request permission.
+        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (rc != PackageManager.PERMISSION_GRANTED) {
+            requestStoragePermission();
+        }
+
         statusMessage = (TextView) findViewById(R.id.status_message);
         barcodeValue = (TextView) findViewById(R.id.barcode_value);
-
-        autoFocus = (CompoundButton) findViewById(R.id.auto_focus);
-        useFlash = (CompoundButton) findViewById(R.id.use_flash);
 
         findViewById(R.id.read_barcode).setOnClickListener(this);
         findViewById(R.id.btn_web_client).setOnClickListener(this);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+            new AlertDialog.Builder(this)
+                    .setMessage(R.string.exit_question)
+                    .setPositiveButton(R.string.YES, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                finishAffinity();
+                            } else {
+                                finish();
+                            }
+                        }
+                    })
+                    .setNegativeButton(R.string.NO, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                        }
+                    }).show();
+            return false;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     /**
@@ -81,8 +112,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.read_barcode: {
                 // launch barcode activity.
                 Intent intent = new Intent(this, BarcodeCaptureActivity.class);
-                intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
-                intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
                 startActivityForResult(intent, RC_BARCODE_CAPTURE);
                 break;
 
@@ -169,14 +198,19 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         } else {
                             File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                             File file = new File(directory, m.getName());
-                            FileOutputStream fout = new FileOutputStream(file);
-                            fout.write(m.getBody());
-                            fout.flush();
-                            fout.close();
-                            return String.format(getString(R.string.unzip_stage_4), file.getAbsolutePath());
+                            if (file.exists() || file.createNewFile()) {
+                                FileOutputStream fout = new FileOutputStream(file);
+                                fout.write(m.getBody());
+                                fout.flush();
+                                fout.close();
+                                return String.format(getString(R.string.unzip_stage_4), file.getAbsolutePath());
+                            } else {
+                                return "Не удалось сохранить файл";
+                            }
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Extract data error", e);
+                        return "Не удалось сохранить файл: " + e.getMessage();
                     }
                 }
             }
@@ -191,5 +225,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
+    private void requestStoragePermission() {
+        Log.w(TAG, "Storage permission is not granted. Requesting permission");
+
+        final String[] permissions = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
+        if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            ActivityCompat.requestPermissions(this, permissions, 2);
+            return;
+        }
+
+        final Activity thisActivity = this;
+
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ActivityCompat.requestPermissions(thisActivity, permissions, 2);
+            }
+        };
+
+        findViewById(R.id.mainTopLayout).setOnClickListener(listener);
+        Snackbar.make(getWindow().getDecorView().getRootView(),
+                R.string.permission_storage_rationale,
+                Snackbar.LENGTH_INDEFINITE)
+                .setAction(R.string.ok, listener)
+                .show();
+    }
 
 }
