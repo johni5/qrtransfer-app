@@ -13,6 +13,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.webkit.DownloadListener;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -33,6 +35,8 @@ public class WebClientActivity extends Activity implements View.OnClickListener 
     private void loadPage() {
         WebView webClient = (WebView) findViewById(R.id.web_client);
         webClient.getSettings().setJavaScriptEnabled(true);
+        webClient.getSettings().setAllowFileAccess(true);
+        webClient.getSettings().setAllowContentAccess(true);
 
         final Activity activity = this;
         webClient.setWebViewClient(new WebViewClient() {
@@ -48,6 +52,7 @@ public class WebClientActivity extends Activity implements View.OnClickListener 
                 // Redirect to deprecated method, so you can use it in all SDK versions
                 onReceivedError(view, rerr.getErrorCode(), rerr.getDescription().toString(), req.getUrl().toString());
             }
+
         });
         webClient.loadUrl("http://qrt.is-best.net");
         webClient.setDownloadListener(new DownloadListener() {

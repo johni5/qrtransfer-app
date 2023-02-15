@@ -452,9 +452,9 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
         protected Message doInBackground(Barcode... s) {
             if (s != null && s.length > 0) {
                 String hex = s[0].rawValue;
-                if (hex != null && hex.length() > 15) {
+                if (hex != null && hex.length() > 7) {
                     try {
-                        Part p = MessageEncoder.encodeHex(hex);
+                        Part p = MessageEncoder.encodeStr(hex);
                         if (p != null) {
                             int index = p.getIndex();
                             int count = p.getSize();

@@ -25,6 +25,8 @@ import com.del.qr.Part;
 import com.del.qrt.camera.GraphicOverlay;
 import com.google.android.gms.vision.barcode.Barcode;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * Graphic instance for rendering barcode position, size, and ID within an associated graphic
  * overlay view.
@@ -100,7 +102,12 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
         rect.bottom = translateY(rect.bottom);
         canvas.drawRect(rect, mRectPaint);
 
-        Part v = MessageEncoder.encodeHex(barcode.rawValue);
+        Part v = null;
+        try {
+            v = MessageEncoder.encodeStr(barcode.rawValue);
+        } catch (UnsupportedEncodingException e) {
+            //
+        }
         if (v != null) {
             try {
                 int index = v.getIndex();

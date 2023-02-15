@@ -28,10 +28,4 @@
 
   </com.del.qrt.camera.CameraSourcePreview>
 
-  <Button
-      android:layout_width="150dp"
-      android:layout_height="wrap_content"
-      android:text="@string/read_barcode"
-      android:id="@+id/read_barcode" />
-
 </LinearLayout>
