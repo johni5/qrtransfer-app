@@ -70,7 +70,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Main activity demonstrating how to pass extra parameters to an activity that
  * reads barcodes.
  */
-public class MainActivity extends AppCompatActivity implements BarcodeGraphicTracker.BarcodeUpdateListener {
+public class MainActivity extends AppCompatActivity implements BarcodeGraphicTracker.BarcodeUpdateListener, View.OnClickListener {
 
     private static final String TAG = "QR-transfer-main";
 
@@ -106,9 +106,23 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
         progressBar = (ProgressBar) findViewById(R.id.progress_bar);
         progressBar.setMax(0);
         progressBar.setProgress(0);
+        findViewById(R.id.bHelp).setOnClickListener(this);
 
         checkPermissionsAndRun();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.bHelp: {
+                Intent intent = new Intent(this, WebClientActivity.class);
+                startActivity(intent);
+                break;
+
+            }
+        }
+
     }
 
     private void checkPermissionsAndRun() {
