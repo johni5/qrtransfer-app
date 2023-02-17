@@ -21,6 +21,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,7 +30,6 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -98,12 +98,13 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setTitle(getString(R.string.title_activity_main) + " V" + getString(R.string.version));
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        mPreview = (CameraSourcePreview) findViewById(R.id.preview);
-        mGraphicOverlay = (GraphicOverlay<BarcodeGraphic>) findViewById(R.id.graphicOverlay);
-        uploadInfoMessage = (TextView) findViewById(R.id.upload_info);
-        progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+        mPreview = findViewById(R.id.preview);
+        mGraphicOverlay = findViewById(R.id.graphicOverlay);
+        uploadInfoMessage = findViewById(R.id.upload_info);
+        progressBar = findViewById(R.id.progress_bar);
         progressBar.setMax(0);
         progressBar.setProgress(0);
         findViewById(R.id.bHelp).setOnClickListener(this);
@@ -153,11 +154,7 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
                     .setMessage(R.string.exit_question)
                     .setPositiveButton(R.string.YES, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                finishAffinity();
-                            } else {
-                                finish();
-                            }
+                            finishAffinity();
                         }
                     })
                     .setNegativeButton(R.string.NO, new DialogInterface.OnClickListener() {
@@ -278,9 +275,7 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
                 .setRequestedFps(15.0f);
 
         // make sure that auto focus is an available option
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            builder = builder.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-        }
+        builder = builder.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
 
         mCameraSource = builder.build();
     }
@@ -384,6 +379,10 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
     @SuppressLint("StaticFieldLeak")
     private class ReadBarcodeTask extends AsyncTask<Barcode, Void, Message> {
 
+        public ReadBarcodeTask() {
+            super();
+        }
+
         @Override
         protected Message doInBackground(Barcode... s) {
             if (s != null && s.length > 0) {
@@ -449,6 +448,10 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
     @SuppressLint("StaticFieldLeak")
     private class SavePackageTask extends AsyncTask<Message, Void, String> {
 
+        public SavePackageTask() {
+            super();
+        }
+
         @Override
         protected String doInBackground(Message... s) {
             if (s != null && s.length > 0) {
@@ -462,15 +465,15 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
                             mainThreadHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    android.text.ClipboardManager clipboard = (android.text.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                                    clipboard.setText(text);
+                                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                    clipboard.setPrimaryClip(ClipData.newPlainText("QR Transfer", text));
                                     Snackbar.make(getWindow().getDecorView().getRootView(),
                                             "Текст скопирован в буфер обмена",
                                             5000).show();
 
                                 }
                             });
-                            return "Текст получен";
+                            return "Текст получен и будет скопирован в буфер обмена";
                         } else {
                             File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                             File file = new File(directory, m.getName());

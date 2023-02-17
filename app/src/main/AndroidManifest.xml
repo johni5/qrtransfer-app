@@ -19,7 +19,7 @@
         android:supportsRtl = "true"
         android:theme="@style/Theme.AppCompat"
         android:usesCleartextTraffic="true"
-        tools:targetApi="m">
+        tools:targetApi="S">
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -30,7 +30,7 @@
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/title_activity_main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,10 +38,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name="com.del.qrt.BarcodeCaptureActivity"
-            android:screenOrientation="portrait"
-            android:label="Read Barcode"/>
 
         <activity android:name="com.del.qrt.WebClientActivity"
             android:screenOrientation="portrait"

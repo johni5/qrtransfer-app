@@ -1,20 +1,12 @@
 package com.del.qrt;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.webkit.DownloadListener;
-import android.webkit.ValueCallback;
-import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -23,7 +15,6 @@ import android.widget.Toast;
 
 public class WebClientActivity extends Activity implements View.OnClickListener {
 
-    @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +23,7 @@ public class WebClientActivity extends Activity implements View.OnClickListener 
         loadPage();
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private void loadPage() {
         WebView webClient = (WebView) findViewById(R.id.web_client);
         webClient.getSettings().setJavaScriptEnabled(true);
@@ -46,7 +38,6 @@ public class WebClientActivity extends Activity implements View.OnClickListener 
                 Toast.makeText(activity, description, Toast.LENGTH_SHORT).show();
             }
 
-            @TargetApi(android.os.Build.VERSION_CODES.M)
             @Override
             public void onReceivedError(WebView view, WebResourceRequest req, WebResourceError rerr) {
                 // Redirect to deprecated method, so you can use it in all SDK versions

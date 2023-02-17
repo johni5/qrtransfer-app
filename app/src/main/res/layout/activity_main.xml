@@ -25,6 +25,7 @@
         android:orientation="vertical"
         android:layout_below="@id/progress_bar"
         android:layout_centerHorizontal="true"
+        android:layout_alignParentLeft="true"
         android:layout_marginTop="10dp">
 
         <com.del.qrt.camera.CameraSourcePreview
@@ -50,7 +51,6 @@
 
     </LinearLayout>
 
-
     <Button
         android:id="@+id/bHelp"
         android:layout_width="150dp"
@@ -59,6 +59,5 @@
         android:layout_alignParentBottom="true"
         android:layout_marginTop="20dp"
         android:text="About" />
-
 
 </RelativeLayout>
