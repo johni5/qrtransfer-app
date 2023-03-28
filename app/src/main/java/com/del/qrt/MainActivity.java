@@ -29,6 +29,7 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -117,10 +118,10 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.bHelp: {
-                Intent intent = new Intent(this, WebClientActivity.class);
-                startActivity(intent);
+                Intent viewIntent = new Intent("android.intent.action.VIEW",
+                        Uri.parse(getString(R.string.site) + "#services"));
+                startActivity(viewIntent);
                 break;
-
             }
         }
 
