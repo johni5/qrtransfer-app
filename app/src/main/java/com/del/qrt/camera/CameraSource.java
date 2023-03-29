@@ -695,39 +695,39 @@ public class CameraSource {
         }
         Camera camera = Camera.open(requestedCameraId);
 
-//        SizePair sizePair = selectSizePair(camera, mRequestedPreviewWidth, mRequestedPreviewHeight);
-        android.hardware.Camera.Size mPreview = getMaxPreviewSize(camera);
+        SizePair sizePair = selectSizePair(camera, mRequestedPreviewWidth, mRequestedPreviewHeight);
+//        android.hardware.Camera.Size mPreview = getMaxPreviewSize(camera);
 
-//        if (sizePair == null) {
-//            throw new RuntimeException("Could not find suitable preview size.");
-//        }
-//        Size pictureSize = sizePair.pictureSize();
-//        mPreviewSize = sizePair.previewSize();
-        mPreviewSize = new Size(mPreview.width, mPreview.height);
+        if (sizePair == null) {
+            throw new RuntimeException("Could not find suitable preview size.");
+        }
+        Size pictureSize = sizePair.pictureSize();
+        mPreviewSize = sizePair.previewSize();
+//        mPreviewSize = new Size(mPreview.width, mPreview.height);
 
         int[] previewFpsRange = selectPreviewFpsRange(camera, mRequestedFps);
         if (previewFpsRange == null) {
-            throw new RuntimeException("Could not find suitable preview frames per second range.");
+            Log.e(TAG, "Could not find suitable preview frames per second range.");
         }
 
         Camera.Parameters parameters = camera.getParameters();
 
-//        if (pictureSize != null) {
-//            parameters.setPictureSize(pictureSize.getWidth(), pictureSize.getHeight());
-//        }
+        if (pictureSize != null) {
+            parameters.setPictureSize(pictureSize.getWidth(), pictureSize.getHeight());
+        }
 
         parameters.setPreviewSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-//        parameters.setPreviewSize(320, 240);
-        parameters.setPreviewFpsRange(
-                previewFpsRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX],
-                previewFpsRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]);
+        if (previewFpsRange != null) {
+            parameters.setPreviewFpsRange(
+                    previewFpsRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX],
+                    previewFpsRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]);
+        }
         parameters.setPreviewFormat(ImageFormat.NV21);
 
         setRotation(camera, parameters, requestedCameraId);
 
         if (mFocusMode != null) {
-            if (parameters.getSupportedFocusModes().contains(
-                    mFocusMode)) {
+            if (parameters.getSupportedFocusModes().contains(mFocusMode)) {
                 parameters.setFocusMode(mFocusMode);
             } else {
                 Log.i(TAG, "Camera focus mode: " + mFocusMode + " is not supported on this device.");
@@ -808,14 +808,12 @@ public class CameraSource {
         int minDiff = Integer.MAX_VALUE;
         for (SizePair sizePair : validPreviewSizes) {
             Size size = sizePair.previewSize();
-//            if (size.getWidth() < desiredWidth && size.getHeight() < desiredHeight) {
             int diff = Math.abs(size.getWidth() - desiredWidth) +
                     Math.abs(size.getHeight() - desiredHeight);
             if (diff < minDiff) {
                 selectedPair = sizePair;
                 minDiff = diff;
             }
-//            }
         }
 
         return selectedPair;
@@ -928,15 +926,16 @@ public class CameraSource {
         int[] selectedFpsRange = null;
         int minDiff = Integer.MAX_VALUE;
         List<int[]> previewFpsRangeList = camera.getParameters().getSupportedPreviewFpsRange();
-        for (int[] range : previewFpsRangeList) {
-            int deltaMin = desiredPreviewFpsScaled - range[Camera.Parameters.PREVIEW_FPS_MIN_INDEX];
-            int deltaMax = desiredPreviewFpsScaled - range[Camera.Parameters.PREVIEW_FPS_MAX_INDEX];
-            int diff = Math.abs(deltaMin) + Math.abs(deltaMax);
-            if (diff < minDiff) {
-                selectedFpsRange = range;
-                minDiff = diff;
+        if (previewFpsRangeList != null)
+            for (int[] range : previewFpsRangeList) {
+                int deltaMin = desiredPreviewFpsScaled - range[Camera.Parameters.PREVIEW_FPS_MIN_INDEX];
+                int deltaMax = desiredPreviewFpsScaled - range[Camera.Parameters.PREVIEW_FPS_MAX_INDEX];
+                int diff = Math.abs(deltaMin) + Math.abs(deltaMax);
+                if (diff < minDiff) {
+                    selectedFpsRange = range;
+                    minDiff = diff;
+                }
             }
-        }
         return selectedFpsRange;
     }
 

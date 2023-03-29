@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="site">https://qrt.is-best.net</string>
-    <string name="version">1.2.3</string>
+    <string name="version">1.2.4</string>
     <string name="dialog_header">QR Transfer</string>
     <string name="ok">OK</string>
     <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
