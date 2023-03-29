@@ -92,26 +92,28 @@ public class CameraSource {
     private static final float ASPECT_RATIO_TOLERANCE = 0.01f;
 
     @StringDef({
-        Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE,
-        Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO,
-        Camera.Parameters.FOCUS_MODE_AUTO,
-        Camera.Parameters.FOCUS_MODE_EDOF,
-        Camera.Parameters.FOCUS_MODE_FIXED,
-        Camera.Parameters.FOCUS_MODE_INFINITY,
-        Camera.Parameters.FOCUS_MODE_MACRO
+            Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE,
+            Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO,
+            Camera.Parameters.FOCUS_MODE_AUTO,
+            Camera.Parameters.FOCUS_MODE_EDOF,
+            Camera.Parameters.FOCUS_MODE_FIXED,
+            Camera.Parameters.FOCUS_MODE_INFINITY,
+            Camera.Parameters.FOCUS_MODE_MACRO
     })
     @Retention(RetentionPolicy.SOURCE)
-    private @interface FocusMode {}
+    private @interface FocusMode {
+    }
 
     @StringDef({
-        Camera.Parameters.FLASH_MODE_ON,
-        Camera.Parameters.FLASH_MODE_OFF,
-        Camera.Parameters.FLASH_MODE_AUTO,
-        Camera.Parameters.FLASH_MODE_RED_EYE,
-        Camera.Parameters.FLASH_MODE_TORCH
+            Camera.Parameters.FLASH_MODE_ON,
+            Camera.Parameters.FLASH_MODE_OFF,
+            Camera.Parameters.FLASH_MODE_AUTO,
+            Camera.Parameters.FLASH_MODE_RED_EYE,
+            Camera.Parameters.FLASH_MODE_TORCH
     })
     @Retention(RetentionPolicy.SOURCE)
-    private @interface FlashMode {}
+    private @interface FlashMode {
+    }
 
     private Context mContext;
 
@@ -450,59 +452,6 @@ public class CameraSource {
         return mFacing;
     }
 
-    public int doZoom(float scale) {
-        synchronized (mCameraLock) {
-            if (mCamera == null) {
-                return 0;
-            }
-            int currentZoom = 0;
-            int maxZoom;
-            Camera.Parameters parameters = mCamera.getParameters();
-            if (!parameters.isZoomSupported()) {
-                Log.w(TAG, "Zoom is not supported on this device");
-                return currentZoom;
-            }
-            maxZoom = parameters.getMaxZoom();
-
-            currentZoom = parameters.getZoom() + 1;
-            float newZoom;
-            if (scale > 1) {
-                newZoom = currentZoom + scale * (maxZoom / 10);
-            } else {
-                newZoom = currentZoom * scale;
-            }
-            currentZoom = Math.round(newZoom) - 1;
-            if (currentZoom < 0) {
-                currentZoom = 0;
-            } else if (currentZoom > maxZoom) {
-                currentZoom = maxZoom;
-            }
-            parameters.setZoom(currentZoom);
-            mCamera.setParameters(parameters);
-            return currentZoom;
-        }
-    }
-
-    /**
-     * Initiates taking a picture, which happens asynchronously.  The camera source should have been
-     * activated previously with {@link #start()} or {@link #start(SurfaceHolder)}.  The camera
-     * preview is suspended while the picture is being taken, but will resume once picture taking is
-     * done.
-     *
-     * @param shutter the callback for image capture moment, or null
-     * @param jpeg    the callback for JPEG image data, or null
-     */
-    public void takePicture(ShutterCallback shutter, PictureCallback jpeg) {
-        synchronized (mCameraLock) {
-            if (mCamera != null) {
-                PictureStartCallback startCallback = new PictureStartCallback();
-                startCallback.mDelegate = shutter;
-                PictureDoneCallback doneCallback = new PictureDoneCallback();
-                doneCallback.mDelegate = jpeg;
-                mCamera.takePicture(startCallback, null, null, doneCallback);
-            }
-        }
-    }
 
     /**
      * Gets the current focus mode setting.
@@ -746,12 +695,15 @@ public class CameraSource {
         }
         Camera camera = Camera.open(requestedCameraId);
 
-        SizePair sizePair = selectSizePair(camera, mRequestedPreviewWidth, mRequestedPreviewHeight);
-        if (sizePair == null) {
-            throw new RuntimeException("Could not find suitable preview size.");
-        }
-        Size pictureSize = sizePair.pictureSize();
-        mPreviewSize = sizePair.previewSize();
+//        SizePair sizePair = selectSizePair(camera, mRequestedPreviewWidth, mRequestedPreviewHeight);
+        android.hardware.Camera.Size mPreview = getMaxPreviewSize(camera);
+
+//        if (sizePair == null) {
+//            throw new RuntimeException("Could not find suitable preview size.");
+//        }
+//        Size pictureSize = sizePair.pictureSize();
+//        mPreviewSize = sizePair.previewSize();
+        mPreviewSize = new Size(mPreview.width, mPreview.height);
 
         int[] previewFpsRange = selectPreviewFpsRange(camera, mRequestedFps);
         if (previewFpsRange == null) {
@@ -760,11 +712,12 @@ public class CameraSource {
 
         Camera.Parameters parameters = camera.getParameters();
 
-        if (pictureSize != null) {
-            parameters.setPictureSize(pictureSize.getWidth(), pictureSize.getHeight());
-        }
+//        if (pictureSize != null) {
+//            parameters.setPictureSize(pictureSize.getWidth(), pictureSize.getHeight());
+//        }
 
         parameters.setPreviewSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+//        parameters.setPreviewSize(320, 240);
         parameters.setPreviewFpsRange(
                 previewFpsRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX],
                 previewFpsRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]);
@@ -851,16 +804,18 @@ public class CameraSource {
         // the desired values and the actual values for width and height.  This is certainly not the
         // only way to select the best size, but it provides a decent tradeoff between using the
         // closest aspect ratio vs. using the closest pixel area.
-        SizePair selectedPair = null;
+        SizePair selectedPair = validPreviewSizes.get(0);
         int minDiff = Integer.MAX_VALUE;
         for (SizePair sizePair : validPreviewSizes) {
             Size size = sizePair.previewSize();
+//            if (size.getWidth() < desiredWidth && size.getHeight() < desiredHeight) {
             int diff = Math.abs(size.getWidth() - desiredWidth) +
                     Math.abs(size.getHeight() - desiredHeight);
             if (diff < minDiff) {
                 selectedPair = sizePair;
                 minDiff = diff;
             }
+//            }
         }
 
         return selectedPair;
@@ -937,6 +892,19 @@ public class CameraSource {
         }
 
         return validPreviewSizes;
+    }
+
+    private static android.hardware.Camera.Size getMaxPreviewSize(Camera camera) {
+        Camera.Parameters parameters = camera.getParameters();
+        List<android.hardware.Camera.Size> supportedPreviewSizes =
+                parameters.getSupportedPreviewSizes();
+        android.hardware.Camera.Size result = null;
+        for (android.hardware.Camera.Size previewSize : supportedPreviewSizes) {
+            if (result == null ||
+                    result.width < previewSize.width) result = previewSize;
+        }
+
+        return result;
     }
 
     /**
@@ -1126,8 +1094,8 @@ public class CameraSource {
 
                 if (!mBytesToByteBuffer.containsKey(data)) {
                     Log.d(TAG,
-                        "Skipping frame.  Could not find ByteBuffer associated with the image " +
-                        "data from the camera.");
+                            "Skipping frame.  Could not find ByteBuffer associated with the image " +
+                                    "data from the camera.");
                     return;
                 }
 

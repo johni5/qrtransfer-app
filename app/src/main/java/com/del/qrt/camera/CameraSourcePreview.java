@@ -18,12 +18,15 @@ package com.del.qrt.camera;
 import android.Manifest;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Point;
 import android.support.annotation.RequiresPermission;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 
 import com.google.android.gms.common.images.Size;
 
@@ -130,15 +133,21 @@ public class CameraSourcePreview extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        int width = 320;
-        int height = 240;
-        if (mCameraSource != null) {
-            Size size = mCameraSource.getPreviewSize();
-            if (size != null) {
-                width = size.getWidth();
-                height = size.getHeight();
-            }
-        }
+        WindowManager wm = (WindowManager)getContext().getSystemService(Context.WINDOW_SERVICE);
+        Display defaultDisplay = wm.getDefaultDisplay();
+        Point p = new Point();
+        defaultDisplay.getSize(p);
+//        int width = 320;
+//        int height = 240;
+        int width = p.y;
+        int height = p.x;
+//        if (mCameraSource != null) {
+//            Size size = mCameraSource.getPreviewSize();
+//            if (size != null) {
+//                width = size.getWidth();
+//                height = size.getHeight();
+//            }
+//        }
 
         // Swap width and height sizes when in portrait, since it will be rotated 90 degrees
         if (isPortraitMode()) {
@@ -156,10 +165,10 @@ public class CameraSourcePreview extends ViewGroup {
         int childHeight = (int)(((float) layoutWidth / (float) width) * height);
 
         // If height is too tall using fit width, does fit height instead.
-        if (childHeight > layoutHeight) {
-            childHeight = layoutHeight;
-            childWidth = (int)(((float) layoutHeight / (float) height) * width);
-        }
+//        if (childHeight > layoutHeight) {
+//            childHeight = layoutHeight;
+//            childWidth = (int)(((float) layoutHeight / (float) height) * width);
+//        }
 
         for (int i = 0; i < getChildCount(); ++i) {
             getChildAt(i).layout(0, 0, childWidth, childHeight);
