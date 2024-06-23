@@ -6,6 +6,7 @@
     <string name="ok">OK</string>
     <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
     <string name="permission_storage_rationale">Access to the storage is needed for save file</string>
+    <string name="permission_storage_open">Требуется доступ к хранилищу</string>
     <string name="permission_internet_rationale">Access to the Internet is needed</string>
     <string name="no_any_permission">This application cannot run because it does not have the any permissions.  The application will now exit.</string>
     <string name="low_storage_error">Face detector dependencies cannot be downloaded due to low device storage</string>
@@ -28,4 +29,7 @@
     <string name="YES">"Да"</string>
     <string name="NO">"Нет"</string>
     <string name="help">Help</string>
+    <string name="send">Отправить</string>
+    <string name="next">&lt;</string>
+    <string name="play">Пуск/Пауза</string>
 </resources>

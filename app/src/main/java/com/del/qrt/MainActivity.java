@@ -28,7 +28,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Point;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -41,7 +40,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Display;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -111,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
         progressBar.setMax(0);
         progressBar.setProgress(0);
         findViewById(R.id.fbHelp).setOnClickListener(this);
+        findViewById(R.id.fbSend).setOnClickListener(this);
 
         checkPermissionsAndRun();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -125,8 +124,12 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
                 startActivity(viewIntent);
                 break;
             }
+            case R.id.fbSend: {
+                Intent intent = new Intent(this, SendActivity.class);
+                startActivity(intent);
+                break;
+            }
         }
-
     }
 
     private void checkPermissionsAndRun() {
@@ -465,21 +468,19 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
                         if (m.isClipboard()) {
                             Handler mainThreadHandler = new Handler(Looper.getMainLooper());
                             final String text = m.getTextUTF();
-                            mainThreadHandler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                                    clipboard.setPrimaryClip(ClipData.newPlainText("QR Transfer", text));
-                                    Snackbar.make(getWindow().getDecorView().getRootView(),
-                                            "Текст скопирован в буфер обмена",
-                                            5000).show();
+                            mainThreadHandler.post(() -> {
+                                android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                clipboard.setPrimaryClip(ClipData.newPlainText("QR Transfer", text));
+                                Snackbar.make(getWindow().getDecorView().getRootView(),
+                                        "Текст скопирован в буфер обмена",
+                                        5000).show();
 
-                                }
                             });
                             return "Текст получен и будет скопирован в буфер обмена";
                         } else {
                             File directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                             File file = new File(directory, m.getName());
+                            Log.i(TAG, String.format("Try to create file: %s", file.getAbsolutePath()));
                             if (file.exists() || file.createNewFile()) {
                                 FileOutputStream fout = new FileOutputStream(file);
                                 fout.write(m.getBody());
@@ -487,7 +488,7 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
                                 fout.close();
                                 return String.format(getString(R.string.unzip_stage_4), file.getAbsolutePath());
                             } else {
-                                return "Не удалось сохранить файл";
+                                return String.format("Не удалось сохранить файл '%s'", file.getAbsolutePath());
                             }
                         }
                     } catch (Exception e) {
@@ -505,14 +506,11 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle(R.string.dialog_header)
                         .setMessage(s)
-                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                ready = true;
-                                progressBar.setProgress(0);
-                                name = null;
-                            }
-                        })
-                        .show();
+                        .setPositiveButton(R.string.ok, (dialogInterface, i) -> {
+                            ready = true;
+                            progressBar.setProgress(0);
+                            name = null;
+                        }).show();
             }
         }
     }
