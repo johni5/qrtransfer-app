@@ -7,7 +7,8 @@ android {
         applicationId 'com.del.qrt'
         minSdkVersion 27
         targetSdkVersion 33
-        versionCode 13
+        versionCode 16
+        versionName '1.01'
     }
     buildTypes {
         release {
