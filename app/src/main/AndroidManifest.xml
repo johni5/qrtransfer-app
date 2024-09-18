@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.del.qrt"
+    package="com.del.qrtx"
+    android:versionCode="1"
+    android:versionName="1"
     android:installLocation="auto" >
 
     <uses-feature android:name="android.hardware.camera" />
@@ -40,11 +42,11 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.del.qrt.WebClientActivity"
+        <activity android:name=".WebClientActivity"
             android:screenOrientation="portrait"
             android:label="Clients"/>
 
-        <activity android:name="com.del.qrt.SendActivity"
+        <activity android:name=".SendActivity"
             android:screenOrientation="portrait"
             android:label="Send file"/>
 

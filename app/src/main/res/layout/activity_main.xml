@@ -7,23 +7,23 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:keepScreenOn="true"
-    tools:context="com.del.qrt.MainActivity">
+    tools:context="com.del.qrtx.MainActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.del.qrt.camera.CameraSourcePreview
+        <com.del.qrtx.camera.CameraSourcePreview
             android:id="@+id/preview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-            <com.del.qrt.camera.GraphicOverlay
+            <com.del.qrtx.camera.GraphicOverlay
                 android:id="@+id/graphicOverlay"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-        </com.del.qrt.camera.CameraSourcePreview>
+        </com.del.qrtx.camera.CameraSourcePreview>
 
         <TextView
             android:id="@+id/siteInfo"

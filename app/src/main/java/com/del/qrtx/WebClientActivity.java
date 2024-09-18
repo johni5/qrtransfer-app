@@ -1,4 +1,4 @@
-package com.del.qrt;
+package com.del.qrtx;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.del.qrt;
+package com.del.qrtx;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -22,7 +22,7 @@ import android.graphics.RectF;
 
 import com.del.qr.MessageEncoder;
 import com.del.qr.Part;
-import com.del.qrt.camera.GraphicOverlay;
+import com.del.qrtx.camera.GraphicOverlay;
 import com.google.android.gms.vision.barcode.Barcode;
 
 import java.io.UnsupportedEncodingException;

@@ -1,4 +1,4 @@
-package com.del.qrt;
+package com.del.qrtx;
 
 import android.Manifest;
 import android.app.Activity;
