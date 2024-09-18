@@ -79,6 +79,7 @@ public class SendActivity extends AppCompatActivity {
         };
 
         btnPlay.setOnClickListener(v -> {
+            if (images.isEmpty()) return;
             if (isPaused.get()) {
                 onBtnPlay();
                 handler.post(showNextImage);
@@ -111,6 +112,7 @@ public class SendActivity extends AppCompatActivity {
 
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
+                    if (images.isEmpty()) return false;
                     isHeld = false;
                     handler.removeCallbacks(heldRunnablePrev);
                     if (!isHoldOn) {
@@ -147,6 +149,7 @@ public class SendActivity extends AppCompatActivity {
 
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
+                    if (images.isEmpty()) return false;
                     isHeld = false;
                     handler.removeCallbacks(heldRunnableNext);
                     if (!isHoldOn) {
