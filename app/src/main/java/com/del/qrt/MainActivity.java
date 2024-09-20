@@ -18,7 +18,6 @@ package com.del.qrt;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ClipData;
@@ -31,14 +30,11 @@ import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -46,6 +42,12 @@ import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.del.qr.Message;
 import com.del.qr.MessageEncoder;
@@ -58,6 +60,7 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -94,6 +97,27 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
     private String name;
     private transient boolean ready;
 
+    final private ActivityResultLauncher<String> requestCameraPermissions =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    createCameraSource();
+                } else {
+                    Toast.makeText(this, R.string.no_any_permission, Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            });
+
+    final private ActivityResultLauncher<String[]> requestMultiPermissionLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.RequestMultiplePermissions(),
+                    result -> {
+                        for (String permission : result.keySet()) {
+                            if (!Boolean.TRUE.equals(result.getOrDefault(permission, false))) {
+                                Toast.makeText(this, R.string.no_any_permission, Toast.LENGTH_SHORT).show();
+                                finish();
+                            }
+                        }
+                    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,7 +135,8 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
         findViewById(R.id.fbHelp).setOnClickListener(this);
         findViewById(R.id.fbSend).setOnClickListener(this);
 
-        checkPermissionsAndRun();
+        checkCameraPermissions();
+        checkStorageWritePermissions();
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
@@ -132,24 +157,33 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
         }
     }
 
-    private void checkPermissionsAndRun() {
-        // Check for the camera permission before accessing the camera.  If the
-        // permission is not granted yet, request permission.
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        if (rc != PackageManager.PERMISSION_GRANTED) {
-            requestCameraPermission();
+    private void checkCameraPermissions() {
+        boolean cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED;
+        if (!cameraPermission) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                Toast.makeText(this, R.string.permission_camera_rationale, Toast.LENGTH_SHORT).show();
+            }
+            requestCameraPermissions.launch(Manifest.permission.CAMERA);
             return;
         }
-
-        // Check for the camera permission before accessing the storage.  If the
-        // permission is not granted yet, request permission.
-        rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (rc != PackageManager.PERMISSION_GRANTED) {
-            requestStoragePermission();
-            return;
-        }
-
         createCameraSource();
+    }
+
+    private void checkStorageWritePermissions() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            boolean writeStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED;
+            if (!writeStoragePermission) {
+                String[] permissions = new String[]{
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                };
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    Toast.makeText(this, R.string.permission_storage_rationale, Toast.LENGTH_SHORT).show();
+                }
+                requestMultiPermissionLauncher.launch(permissions);
+            }
+        }
     }
 
     @Override
@@ -170,61 +204,6 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
             return false;
         }
         return super.onKeyDown(keyCode, event);
-    }
-
-    private void requestStoragePermission() {
-        Log.w(TAG, "Storage permission is not granted. Requesting permission");
-
-        final String[] permissions = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE};
-
-        if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_PERM);
-            return;
-        }
-
-        final Activity thisActivity = this;
-
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ActivityCompat.requestPermissions(thisActivity, permissions, RC_HANDLE_PERM);
-            }
-        };
-
-        findViewById(R.id.mainTopLayout).setOnClickListener(listener);
-        Snackbar.make(getWindow().getDecorView().getRootView(),
-                        R.string.permission_storage_rationale,
-                        Snackbar.LENGTH_INDEFINITE)
-                .setAction(R.string.ok, listener)
-                .show();
-    }
-
-    private void requestCameraPermission() {
-        Log.w(TAG, "Camera permission is not granted. Requesting permission");
-
-        final String[] permissions = new String[]{Manifest.permission.CAMERA};
-
-        if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.CAMERA)) {
-            ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_PERM);
-            return;
-        }
-
-        final Activity thisActivity = this;
-
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ActivityCompat.requestPermissions(thisActivity, permissions, RC_HANDLE_PERM);
-            }
-        };
-
-        findViewById(R.id.mainTopLayout).setOnClickListener(listener);
-        Snackbar.make(mGraphicOverlay, R.string.permission_camera_rationale,
-                        Snackbar.LENGTH_INDEFINITE)
-                .setAction(R.string.ok, listener)
-                .show();
     }
 
     /**
@@ -316,37 +295,6 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
         if (mPreview != null) {
             mPreview.release();
         }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode != RC_HANDLE_PERM) {
-            Log.d(TAG, "Got unexpected permission result: " + requestCode);
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-            return;
-        }
-
-        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            checkPermissionsAndRun();
-            return;
-        }
-
-        Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
-                " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
-
-        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                finish();
-            }
-        };
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.dialog_header)
-                .setMessage(R.string.no_any_permission)
-                .setPositiveButton(R.string.ok, listener)
-                .show();
     }
 
     /**

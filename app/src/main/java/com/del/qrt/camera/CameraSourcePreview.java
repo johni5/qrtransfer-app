@@ -18,16 +18,13 @@ package com.del.qrt.camera;
 import android.Manifest;
 import android.content.Context;
 import android.content.res.Configuration;
-import android.graphics.Point;
-import android.support.annotation.RequiresPermission;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
-import android.view.WindowManager;
+
+import androidx.annotation.RequiresPermission;
 
 import com.google.android.gms.common.images.Size;
 

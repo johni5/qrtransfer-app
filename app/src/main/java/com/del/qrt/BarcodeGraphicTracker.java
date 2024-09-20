@@ -16,8 +16,7 @@
 package com.del.qrt;
 
 import android.content.Context;
-import android.support.annotation.UiThread;
-
+import androidx.annotation.UiThread;
 import com.del.qrt.camera.GraphicOverlay;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Tracker;
