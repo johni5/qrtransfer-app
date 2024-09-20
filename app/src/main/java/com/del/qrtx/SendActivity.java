@@ -6,13 +6,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,9 +18,18 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.del.qr.Message;
 import com.del.qr.MessageEncoder;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +40,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SendActivity extends AppCompatActivity {
 
-    private static final int RC_HANDLE_PERM_READ = 3;
     private static final int RC_READ_FILE = 10;
 
     private ImageView imageView;
@@ -49,6 +54,76 @@ public class SendActivity extends AppCompatActivity {
     private ImageButton btnPlay;
     private boolean isHeld = false;
     private boolean isHoldOn = false;
+
+    final private ActivityResultLauncher<String[]> requestMultiPermissionLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.RequestMultiplePermissions(),
+                    result -> {
+                        for (String permission : result.keySet()) {
+                            if (!Boolean.TRUE.equals(result.getOrDefault(permission, false))) {
+                                Toast.makeText(this, R.string.no_any_permission, Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                        }
+                        openFileToSend();
+                    });
+
+    private void checkStorageReadPermissions() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            boolean readStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED;
+            if (!readStoragePermission) {
+                String[] permissions = new String[]{
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                };
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Toast.makeText(this, R.string.permission_storage_rationale, Toast.LENGTH_SHORT).show();
+                }
+                requestMultiPermissionLauncher.launch(permissions);
+                return;
+            }
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            boolean readStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED;
+            if (!readStoragePermission) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Toast.makeText(this, R.string.permission_storage_rationale, Toast.LENGTH_SHORT).show();
+                }
+                requestMultiPermissionLauncher.launch(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE});
+                return;
+            }
+
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            boolean readStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
+                    == PackageManager.PERMISSION_GRANTED;
+            boolean writeStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO)
+                    == PackageManager.PERMISSION_GRANTED;
+            if (!readStoragePermission || !writeStoragePermission) {
+                String[] permissions = new String[]{
+                        Manifest.permission.READ_MEDIA_IMAGES,
+                        Manifest.permission.READ_MEDIA_VIDEO
+                };
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_MEDIA_IMAGES)) {
+                    Toast.makeText(this, R.string.permission_storage_rationale, Toast.LENGTH_SHORT).show();
+                }
+                requestMultiPermissionLauncher.launch(permissions);
+                return;
+            }
+
+        } else {
+            boolean readStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+                    == PackageManager.PERMISSION_GRANTED;
+            if (!readStoragePermission) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)) {
+                    Toast.makeText(this, R.string.permission_storage_rationale, Toast.LENGTH_SHORT).show();
+                }
+                requestMultiPermissionLauncher.launch(new String[]{Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED});
+                return;
+            }
+        }
+        openFileToSend();
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -168,17 +243,16 @@ public class SendActivity extends AppCompatActivity {
         });
 
         btnAdd.setOnClickListener(v -> {
-            int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-            if (rc != PackageManager.PERMISSION_GRANTED) {
-                requestStoragePermission(Manifest.permission.READ_EXTERNAL_STORAGE, RC_HANDLE_PERM_READ);
-            } else {
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).
-                        setType("*/*").
-                        addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(Intent.createChooser(intent, "Укажите файл"), RC_READ_FILE);
-            }
+            checkStorageReadPermissions();
         });
 
+    }
+
+    private void openFileToSend() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).
+                setType("*/*").
+                addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(Intent.createChooser(intent, "Укажите файл"), RC_READ_FILE);
     }
 
     private void onBtnPause() {
@@ -239,24 +313,5 @@ public class SendActivity extends AppCompatActivity {
                 Utils.showError(rootView, e.getMessage(), e);
             }
         }
-    }
-
-
-    private void requestStoragePermission(String externalStorage, int requestCode) {
-        final String[] permissions = new String[]{externalStorage};
-        if (!ActivityCompat.shouldShowRequestPermissionRationale(this, externalStorage)) {
-            ActivityCompat.requestPermissions(this, permissions, requestCode);
-            return;
-        }
-        final Activity thisActivity = this;
-        View.OnClickListener listener = view ->
-                ActivityCompat.requestPermissions(thisActivity, permissions, requestCode);
-
-        findViewById(R.id.sendRootLayout).setOnClickListener(listener);
-        Snackbar.make(getWindow().getDecorView().getRootView(),
-                        R.string.permission_storage_open,
-                        Snackbar.LENGTH_INDEFINITE)
-                .setAction(R.string.ok, listener)
-                .show();
     }
 }
