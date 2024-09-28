@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.del.qrtx;
+package com.del.qrt;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -52,9 +52,9 @@ import androidx.core.content.ContextCompat;
 import com.del.qr.Message;
 import com.del.qr.MessageEncoder;
 import com.del.qr.Part;
-import com.del.qrtx.camera.CameraSource;
-import com.del.qrtx.camera.CameraSourcePreview;
-import com.del.qrtx.camera.GraphicOverlay;
+import com.del.qrt.camera.CameraSource;
+import com.del.qrt.camera.CameraSourcePreview;
+import com.del.qrt.camera.GraphicOverlay;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.MultiProcessor;

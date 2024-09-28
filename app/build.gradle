@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace 'com.del.qrtx'
+    namespace 'com.del.qrt'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.del.qrtx'
+        applicationId 'com.del.qrt'
         minSdkVersion 24
         targetSdkVersion 34
-        versionCode 2
+        versionCode 17
         versionName '1.02'
     }
     buildTypes {
